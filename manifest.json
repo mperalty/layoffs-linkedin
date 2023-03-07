@@ -1,0 +1,35 @@
+{
+
+    "manifest_version": 3,
+    "name": "Layoff Check",
+    "version": "1.0",
+
+    "description": "Understand if a company has a listing in Layoffs.fyi before you apply",
+
+    "icons": {
+        "32": "icons/32.png",
+        "48": "icons/48.png",
+        "64": "icons/64.png",
+        "128": "icons/128.png",
+        "256": "icons/256.png"
+    },
+
+    "permissions": [
+        "tabs"
+    ],
+
+    "host_permissions": [
+        "*://*.docs.google.com/spreadsheets/d/*"
+    ],
+
+    "background": {
+        "service_worker": "background.js"
+    },
+
+    "content_scripts": [
+        {
+            "matches": ["*://*.linkedin.com/jobs/*"],
+            "js": ["jquery.min.js", "main.js"]
+        }
+    ]
+}
