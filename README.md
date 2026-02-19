@@ -83,6 +83,14 @@ When you open a LinkedIn job page, the extension:
 - Fuzzy matching may still miss uncommon aliases or over-match rare edge cases.
 - The data source is external and fetched at runtime; availability depends on Google Sheets and layoffs.fyi tracker updates.
 
+## Potential Improvements
+
+- Add a confidence indicator (exact/fuzzy/alias) in the LinkedIn badge to explain why a company matched.
+- Provide an allowlist/blocklist for company aliases in Options to reduce false positives.
+- Add optional retry + timeout handling for CSV fetches and show a user-facing status when the data source is unavailable.
+- Introduce automated tests for matching logic and CSV parsing with fixture data from layoffs.fyi.
+- Consider publishing a lightweight changelog in the popup so users can see recent improvements and matching updates.
+
 ## Privacy
 
 - The extension reads company names from LinkedIn job pages to perform the lookup.

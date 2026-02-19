@@ -87,10 +87,7 @@ async function getCachedCsvData(settings) {
 
     const response = await fetch(CSV_URL, { method: 'GET' });
     const data = await response.text();
-    const items = data
-        .split(/\r?\n/)
-        .map((line) => line.trim())
-        .filter(Boolean);
+    const items = parseCsvCompanyNames(data);
 
     await chrome.storage.local.set({
         [CACHE_KEY]: {
@@ -100,6 +97,71 @@ async function getCachedCsvData(settings) {
     });
 
     return items;
+}
+
+function parseCsvLine(line) {
+    const cells = [];
+    let current = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < line.length; i += 1) {
+        const char = line[i];
+        const next = line[i + 1];
+
+        if (char === '"' && inQuotes && next === '"') {
+            current += '"';
+            i += 1;
+            continue;
+        }
+
+        if (char === '"') {
+            inQuotes = !inQuotes;
+            continue;
+        }
+
+        if (char === ',' && !inQuotes) {
+            cells.push(current.trim());
+            current = '';
+            continue;
+        }
+
+        current += char;
+    }
+
+    cells.push(current.trim());
+    return cells;
+}
+
+function parseCsvCompanyNames(csvText) {
+    const lines = csvText
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter(Boolean);
+
+    if (!lines.length) {
+        return [];
+    }
+
+    const headerCells = parseCsvLine(lines[0]).map((cell) => cell.toLowerCase());
+    const companyColumnIndex = headerCells.findIndex((cell) =>
+        ['company', 'company name', 'name'].includes(cell)
+    );
+
+    const startIndex = companyColumnIndex === -1 ? 0 : 1;
+    const names = lines
+        .slice(startIndex)
+        .map((line) => {
+            const cells = parseCsvLine(line);
+            if (companyColumnIndex === -1) {
+                return cells[0];
+            }
+
+            return cells[companyColumnIndex];
+        })
+        .map((name) => name?.trim())
+        .filter(Boolean);
+
+    return [...new Set(names)];
 }
 
 function getCompanyMatch(companyName, csvItems, settings) {
