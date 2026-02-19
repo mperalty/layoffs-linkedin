@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Layoff Check Settings</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; max-width: 480px; }
+    h1 { font-size: 20px; }
+    .row { margin-bottom: 12px; }
+    label { display: flex; gap: 8px; align-items: center; }
+    input[type='number'] { width: 80px; }
+    button { margin-top: 8px; }
+    #status { margin-top: 12px; color: #0a6418; }
+  </style>
+</head>
+<body>
+  <h1>Layoff Check Settings</h1>
+  <div class="row">
+    <label><input type="checkbox" id="fuzzyMatching" />Enable fuzzy company matching</label>
+  </div>
+  <div class="row">
+    <label><input type="checkbox" id="removeSuffixes" />Strip legal suffixes (Inc, LLC, Ltd...)</label>
+  </div>
+  <div class="row">
+    <label for="cacheTtlMinutes">CSV cache TTL (minutes)</label>
+    <input type="number" id="cacheTtlMinutes" min="1" max="1440" />
+  </div>
+  <button id="saveBtn">Save settings</button>
+  <button id="refreshCacheBtn">Refresh cache now</button>
+  <p id="status"></p>
+  <script src="options.js"></script>
+</body>
+</html>
