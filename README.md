@@ -11,8 +11,10 @@ When you open a LinkedIn job page, the extension:
 ## Features
 
 - Works directly on LinkedIn Jobs pages.
-- Checks company names against the public layoffs.fyi tracker.
-- Adds a clear, clickable warning link to layoffs.fyi.
+- Normalized + fuzzy matching for company names.
+- Cached CSV lookups using extension storage.
+- Better LinkedIn SPA handling via route-change detection.
+- Popup and options pages for user configuration.
 - Uses a Manifest V3 service worker.
 
 ## How it Works
@@ -22,24 +24,37 @@ When you open a LinkedIn job page, the extension:
 - Listens for background messages:
   - `urlChanged` to trigger a fresh company lookup.
   - `loadListed` to render the "Listed on Layoffs.fyi" badge in the page UI.
-- Polls the LinkedIn job card area until the company name is available.
+  - `clearListed` to remove the badge when there is no match.
+- Extracts company name from LinkedIn job pages.
+- Handles LinkedIn SPA route transitions through History API hooks and DOM observation.
 - Sends `checkCompany` to the background script with the extracted company name.
 
 ### 2) Background service worker (`background.js`)
 
-- Watches tab updates and notifies the content script when a LinkedIn job URL changes (detected by `currentJobId=`).
-- On `checkCompany`, downloads the layoffs tracker CSV from Google Sheets.
-- Performs a case-insensitive exact-line match against the company name.
-- If matched, sends `loadListed` back to the content script.
+- Watches tab updates and notifies the content script when a LinkedIn job URL changes.
+- On `checkCompany`, reads user settings and cached CSV data.
+- Downloads and caches CSV data in `chrome.storage.local` based on a TTL setting.
+- Performs normalized matching and optional fuzzy matching.
+- Sends `loadListed` or `clearListed` back to the content script.
 
-### 3) Extension manifest (`manifest.json`)
+### 3) Settings UI (`popup.html`, `options.html`)
+
+- Popup provides a quick link to settings.
+- Options page allows users to control:
+  - Fuzzy matching toggle.
+  - Legal suffix stripping toggle.
+  - Cache TTL in minutes.
+  - Manual cache refresh.
+
+### 4) Extension manifest (`manifest.json`)
 
 - Uses `manifest_version: 3`.
 - Registers:
   - `background.js` as the service worker.
   - `jquery.min.js` + `main.js` as content scripts on `*://*.linkedin.com/jobs/*`.
+  - Popup and options pages.
 - Requests:
-  - `tabs` permission.
+  - `tabs` and `storage` permissions.
   - Google Sheets host permission for CSV fetches.
 
 ## Install (Developer Mode)
@@ -54,31 +69,26 @@ When you open a LinkedIn job page, the extension:
 ## Project Structure
 
 - `manifest.json` — Chrome extension manifest and permissions.
-- `background.js` — service worker logic, CSV fetch, and matching.
-- `main.js` — LinkedIn page integration and badge injection.
+- `background.js` — service worker logic, CSV cache, and matching.
+- `main.js` — LinkedIn page integration, route handling, and badge rendering.
+- `popup.html` / `popup.js` — extension popup entrypoint.
+- `options.html` / `options.js` — configurable extension settings.
 - `jquery.min.js` — bundled jQuery dependency used by the content script.
 - `icons/` — extension icons.
 - `Layoffsfyi_Tracker_layoffsfyitracker.2023-3-7.csv` — snapshot/reference CSV file.
 
 ## Notes & Limitations
 
-- Matching is currently a strict case-insensitive string comparison.
-  - Variants like punctuation, legal suffixes, or alternate naming may not match.
-- The extension relies on LinkedIn DOM class names and layout, which can change over time.
+- LinkedIn DOM class names and layout can change over time.
+- Fuzzy matching may still miss uncommon aliases or over-match rare edge cases.
 - The data source is external and fetched at runtime; availability depends on Google Sheets and layoffs.fyi tracker updates.
 
 ## Privacy
 
 - The extension reads company names from LinkedIn job pages to perform the lookup.
 - It fetches a public CSV from Google Sheets.
+- Settings and cache are stored locally via Chrome extension storage.
 - No backend server is used by this project.
-
-## Future Improvements
-
-- Fuzzy/normalized company name matching.
-- Caching the CSV to reduce repeated network requests.
-- Better handling of LinkedIn SPA route transitions.
-- Optional popup/options page for user settings.
 
 ## License
 
